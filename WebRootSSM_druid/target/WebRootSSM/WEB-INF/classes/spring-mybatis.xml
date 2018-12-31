@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!--这是spring和mybatis的整合文件-->
+
+    <!--开启注解扫描,扫描所有的com包下的所有包-->
+    <context:component-scan base-package="com"/>
+    <!--导入spring文件夹下的所有spring-*.xml的文件-->
+    <import resource="classpath:spring/spring-*.xml"/>
+    <!--导入mapper文件夹下的所有*.xml的文件-->
+    <!--<import resource="classpath:mapper/GirlMapper.xml"/>-->
+    <!--导入数据库配置文件,这里不可以使用这种方式-->
+    <!--<context:property-placeholder location="classpath:jdbc.properties"/>-->
+    <!--导入数据库配置文件-->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties"/>
+    </bean>
+    <!-- 数据库连接池druid-->
+    <!--这里没有配置_StatViewServlet,也就是druid的内置监控页面，需要配置的去
+    https://github.com/alibaba/druid/wiki/%E9%85%8D%E7%BD%AE_StatViewServlet%E9%85%8D%E7%BD%AE
+    -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close" >
+        <property name="driverClassName" value="${driver}"/>
+        <property name="url" value="${url}"/>
+        <property name="username" value="${username}"/>
+        <property name="password" value="${password}"/>
+        <!-- 配置监控统计拦截的filters
+        是Druid内置提供一个StatFilter，
+        用于统计监控信息。-->
+        <property name="filters" value="stat" />
+        <!--StatFilter和Log4jFilter组合使用。-->
+        <!--<property name="filters" value="stat,log4j" />-->
+        <!--最大连接池数量-->
+        <property name="maxActive" value="20" />
+        <!--初始化时建立物理连接的个数。初始化发生在显示调用init方法，或者第一次getConnection时-->
+        <property name="initialSize" value="1" />
+        <!--最小连接池数量-->
+        <property name="minIdle" value="1" />
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000" />
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+        <!--建议配置为true，不影响性能，并且保证安全性。
+        申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，
+        执行validationQuery检测连接是否有效。-->
+        <property name="testWhileIdle" value="true" />
+        <!--申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。-->
+        <property name="testOnBorrow" value="false" />
+        <!--归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。和上面的一样QAQ-->
+        <property name="testOnReturn" value="false" />
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小
+        是否缓存preparedStatement，也就是PSCache。
+        PSCache对支持游标的数据库性能提升巨大，
+        比如说oracle。在mysql下建议关闭。-->
+        <property name="poolPreparedStatements" value="true" />
+        <property name="maxOpenPreparedStatements" value="20" />
+    </bean>
+    <!-- 配置SqlSessionFactory对象 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 扫描model包 使用别名 -->
+        <property name="typeAliasesPackage" value="com.hang.pojo"/>
+        <!-- 扫描sql配置文件:mapper需要的xml文件 -->
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+    </bean>
+    <!--&lt;!&ndash; 配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 &ndash;&gt;-->
+    <!--<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">-->
+        <!--&lt;!&ndash; 注入sqlSessionFactory &ndash;&gt;-->
+        <!--<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>-->
+        <!--&lt;!&ndash; 给出需要扫描Dao接口包 &ndash;&gt;-->
+        <!--<property name="basePackage" value="com.hang.dao"/>-->
+    <!--</bean>-->
+
+    <!-- 配置扫描mapper接口包，动态实现mapper接口，注入到spring容器中 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 注入sqlSessionFactory -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!-- 给出需要扫描mapper接口包 -->
+        <property name="basePackage" value="com.hang.mapper"/>
+    </bean>
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+
+
+
+    <!-- 配置基于注解的声明式事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- 定义事务策略 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--所有以query开头的方法都是只读的 -->
+            <tx:method name="query*" read-only="true" />
+            <tx:method name="get*" read-only="true" />
+            <tx:method name="find*" read-only="true" />
+            <tx:method name="select*" read-only="true" />
+            <!--其他方法使用默认事务策略 -->
+            <tx:method name="*" />
+        </tx:attributes>
+    </tx:advice>
+</beans>
