@@ -1,0 +1,3 @@
+# SSM
+其中WebRootSSM里面配置的是一个出c3p0的数据库连接池
+WebRoot_druid使用的是druid的数据库连接池
