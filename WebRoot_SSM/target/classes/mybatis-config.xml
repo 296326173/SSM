@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--引入这个数据库配置文件-->
+    <properties resource="jdbc.properties"></properties>
+    <!--类型别名-->
+    <settings>
+        <!--开启驼峰命名-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <setting name="jdbcTypeForNull" value="NULL"></setting>
+        <setting name="lazyLoadingEnabled" value="true"></setting>
+        <setting name="aggressiveLazyLoading" value="false"></setting>
+        <!--开启二级缓存-->
+        <setting name="cacheEnabled" value="true"></setting>
+    </settings>
+    <typeAliases>
+        <!--直接注册整个包，包下的所有类都生效，默认规则写类名-->
+        <package name="com.hang.pojo"></package>
+    </typeAliases>
+    <environments default="mysqlConnect">
+        <environment id="mysqlConnect">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="UNPOOLED">
+                <property name="url" value="${url}"></property>
+                <property name="driver" value="${driver}"></property>
+                <property name="username" value="${username}"></property>
+                <property name="password" value="${password}"></property>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--包含GirlMapper.xml这个文件，测试时候我们只引入mybatis-config.xml这个文件使用-->
+    <mappers>
+        <mapper resource="mapper/GirlMapper.xml"></mapper>
+    </mappers>
+</configuration>
